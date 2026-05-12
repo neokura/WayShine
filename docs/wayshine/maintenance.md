@@ -12,6 +12,8 @@ without keeping Sunshine's full commit history.
   `.github/workflows/wayshine-linux.yml`.
 - When upstream files must be changed, keep patches small and explain the Linux
   reason in the commit message.
+- Do not attempt to convert this repository into an official GitHub fork unless
+  the project accepts importing Sunshine's upstream history.
 
 ## Initial Baseline
 
@@ -27,7 +29,8 @@ repository does not publish Sunshine's commit history.
 
 ## Upgrade Workflow
 
-1. Confirm the new Sunshine tag on the official release page.
+1. Confirm the new Sunshine tag on the official release page or in the
+   `Upstream Release Watch` workflow summary.
 2. Start from a clean tree on `main`.
 3. Import the new source snapshot:
 
@@ -73,6 +76,17 @@ in this snapshot:
 The wrapper uses `docker buildx` when available and falls back to `docker build`
 for local machines that do not have the buildx plugin installed. Install buildx
 for reliable cross-platform builds, especially from arm64 hosts targeting amd64.
+
+## GitHub Workflows
+
+- `CI`: builds the Linux Docker matrix on pushes and pull requests.
+- `Upstream Release Watch`: scheduled/manual release check against
+  `LizardByte/Sunshine`.
+- `GHCR`: manual or tag-triggered image publication to
+  `ghcr.io/neokura/wayshine`.
+
+There is no `localize` workflow in WayShine yet. Adding one before WayShine owns
+translation changes would create maintenance noise and a misleading badge.
 
 ## Conflict Policy
 

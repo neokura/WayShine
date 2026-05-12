@@ -1,0 +1,96 @@
+---
+name: GHCR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version tag. Defaults to manual-<run_number>."
+        required: false
+        type: string
+  push:
+    tags:
+      - "wayshine-v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: ${{ matrix.target }} / ${{ matrix.platform }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ubuntu-22.04
+            platform: linux/amd64
+          - target: ubuntu-24.04
+            platform: linux/amd64
+          - target: ubuntu-26.04
+            platform: linux/amd64
+          - target: debian-trixie
+            platform: linux/amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: tags
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+            latest="true"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            version="${{ inputs.version }}"
+            latest="false"
+          else
+            version="manual-${GITHUB_RUN_NUMBER}"
+            latest="false"
+          fi
+
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/wayshine"
+          target="${{ matrix.target }}"
+          {
+            echo "version=${version}"
+            echo "image=${image}"
+            echo "primary=${image}:${version}-${target}"
+            echo "latest=${latest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and publish
+        run: |
+          set -euo pipefail
+          tags=(
+            "--tag=${{ steps.tags.outputs.primary }}"
+          )
+
+          if [[ "${{ steps.tags.outputs.latest }}" == "true" ]]; then
+            tags+=("--tag=${{ steps.tags.outputs.image }}:latest-${{ matrix.target }}")
+          fi
+
+          docker buildx build \
+            --platform "${{ matrix.platform }}" \
+            --target sunshine \
+            --build-arg "BRANCH=${GITHUB_REF_NAME}" \
+            --build-arg "BUILD_VERSION=${{ steps.tags.outputs.version }}" \
+            --build-arg "COMMIT=${GITHUB_SHA}" \
+            --file "docker/${{ matrix.target }}.dockerfile" \
+            --push \
+            "${tags[@]}" \
+            .

@@ -1,0 +1,67 @@
+---
+name: Upstream Release Watch
+
+on:
+  schedule:
+    - cron: "18 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Sunshine releases
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Compare upstream release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          current="$(awk -F= '/^upstream_tag=/{print $2}' UPSTREAM.lock)"
+          latest_any="$(
+            gh release list \
+              --repo LizardByte/Sunshine \
+              --limit 1 \
+              --json tagName \
+              --jq '.[0].tagName'
+          )"
+          latest_any_prerelease="$(
+            gh release list \
+              --repo LizardByte/Sunshine \
+              --limit 1 \
+              --json isPrerelease \
+              --jq '.[0].isPrerelease'
+          )"
+          latest_stable="$(
+            gh release list \
+              --repo LizardByte/Sunshine \
+              --exclude-pre-releases \
+              --limit 1 \
+              --json tagName \
+              --jq '.[0].tagName'
+          )"
+
+          {
+            echo "## Sunshine upstream release check"
+            echo
+            echo "- WayShine baseline: \`${current}\`"
+            echo "- Latest upstream release: \`${latest_any}\`"
+            echo "- Latest upstream is prerelease: \`${latest_any_prerelease}\`"
+            echo "- Latest stable upstream release: \`${latest_stable}\`"
+            echo
+            echo "Upgrade command:"
+            echo
+            echo '```bash'
+            echo "scripts/wayshine-import-upstream.sh ${latest_any}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$latest_any" != "$current" ]]; then
+            echo "::warning title=Sunshine update available::WayShine is based on ${current}; upstream latest is ${latest_any}."
+          fi

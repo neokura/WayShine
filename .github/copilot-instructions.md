@@ -1,5 +1,8 @@
 WayShine is a Linux-only, clean-history fork baseline of LizardByte/Sunshine.
 
+Read `AGENTS.md`, `UPSTREAM.lock`, `FORK.md`, and
+`docs/wayshine/maintenance.md` before making structural changes.
+
 Keep platform-specific changes focused on Linux. Do not add Windows, macOS,
 FreeBSD, Homebrew, Winget, or Pacman release automation unless the project scope
 changes explicitly.
