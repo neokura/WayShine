@@ -1,22 +1,21 @@
 # WayShine Agent Guide
 
-WayShine is a Linux-only, clean-history fork baseline of
-`LizardByte/Sunshine`.
+WayShine is the official GitHub fork of `LizardByte/Sunshine` for a Linux-only
+fork line.
 
 ## Non-Negotiables
 
 - Keep the project Linux-only unless the user explicitly changes scope.
+- Preserve upstream Sunshine history; this is required for GitHub's fork
+  relationship.
 - Do not re-add release automation for other operating systems.
-- Do not push to `upstream`; local push URL is intentionally `no_push`.
-- Do not edit `upstream-snapshot` manually.
-- Keep WayShine-specific changes small and replayable on top of Sunshine
-  snapshots.
+- Do not push to `upstream`; local push URL should be `no_push`.
+- Keep WayShine-specific changes small and replayable on top of Sunshine tags.
 
 ## Fork Reality
 
-This repository is not an official GitHub network fork because the project keeps
-Sunshine's history out of `main`. GitHub cannot display "forked from Sunshine"
-without shared upstream history.
+This repository is a real GitHub fork. Do not return to the clean-history model
+unless the user explicitly gives up the official fork relationship.
 
 Use these files as the source of truth:
 
@@ -29,7 +28,7 @@ Use these files as the source of truth:
 - Add WayShine docs under `docs/wayshine`.
 - Add project automation under `.github/workflows`.
 - Add helper scripts as `scripts/wayshine-*`.
-- When modifying imported Sunshine files, keep diffs narrow and explain the
+- When modifying upstream Sunshine files, keep diffs narrow and explain the
   Linux reason in the commit message.
 - Prefer feature flags or isolated Linux modules for major features.
 
@@ -62,10 +61,8 @@ scripts/wayshine-build-native-linux.sh
 ## Upgrade Command
 
 ```bash
-scripts/wayshine-import-upstream.sh <sunshine-tag>
-git switch main
-git merge --no-ff upstream-snapshot
+scripts/wayshine-merge-upstream.sh <sunshine-tag>
 ```
 
 Resolve conflicts by preserving WayShine Linux intent, update `UPSTREAM.lock`,
-then run the Linux build matrix before committing.
+then run the Linux build matrix before opening a pull request into `main`.

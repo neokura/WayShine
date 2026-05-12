@@ -10,9 +10,7 @@
   "timezone": "Europe/Paris",
   "enabledManagers": [
     "dockerfile",
-    "github-actions",
-    "npm",
-    "submodules"
+    "github-actions"
   ],
   "packageRules": [
     {
@@ -20,12 +18,6 @@
         "github-actions"
       ],
       "groupName": "github-actions"
-    },
-    {
-      "matchManagers": [
-        "submodules"
-      ],
-      "groupName": "git-submodules"
     }
   ]
 }

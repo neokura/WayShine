@@ -6,41 +6,36 @@
 [![Upstream Sunshine](https://img.shields.io/github/v/release/LizardByte/Sunshine?include_prereleases&label=upstream%20Sunshine)](https://github.com/LizardByte/Sunshine/releases)
 ![Base](https://img.shields.io/badge/base-v2026.508.45922-blue)
 
-WayShine is a private, Linux-only, clean-history fork baseline of
-[LizardByte/Sunshine](https://github.com/LizardByte/Sunshine), the self-hosted
-game streaming host for Moonlight.
+WayShine is the official GitHub fork of
+[LizardByte/Sunshine](https://github.com/LizardByte/Sunshine) used for a
+Linux-only fork line.
 
 The goal is to build a major Linux-focused feature on top of Sunshine while
-keeping the local patch surface small enough to absorb future Sunshine releases.
+keeping the WayShine patch surface small enough to merge future Sunshine
+releases.
 
 ## Fork Model
 
-This repository is not a GitHub network fork. That is intentional.
+This repository preserves Sunshine's Git history so GitHub can track it as a
+real fork. That is intentional and now takes priority over the earlier
+clean-history idea.
 
-GitHub only shows the official "forked from" relationship when the repository
-shares upstream Git history. WayShine keeps a parentless Sunshine source snapshot
-instead, so GitHub reports `isFork=false`. The upstream relationship is tracked
-through:
+- GitHub parent: `LizardByte/Sunshine`
+- Upstream remote: `https://github.com/LizardByte/Sunshine.git`
+- Upstream default branch: `master`
+- WayShine default branch: `main`
+- WayShine baseline: `v2026.508.45922`
 
-- remote `upstream` pointing at `https://github.com/LizardByte/Sunshine.git`
-- branch `upstream-snapshot`
-- `UPSTREAM.lock`
-- `FORK.md`
-- `docs/wayshine/maintenance.md`
-
-If the official GitHub fork badge ever becomes more important than clean
-history, create a normal GitHub fork and accept that Sunshine's upstream history
-will be part of the repository model.
+The old clean-history experiment was renamed to
+`neokura/WayShine-clean-history` and should be treated as backup only.
 
 ## Current Baseline
 
 - Sunshine tag: `v2026.508.45922`
 - Sunshine commit: `810783dc7c7200fcb613c7d0919f6c8a7bbbebb9`
-- Snapshot commit: `4b666914617c406f9e3197dbaf210e808867f8f0`
 - WayShine branch: `main`
-- Vendor branch: `upstream-snapshot`
 
-The latest upstream Sunshine release should be checked with:
+Check upstream releases with:
 
 ```bash
 gh release list --repo LizardByte/Sunshine --limit 5
@@ -51,10 +46,10 @@ warns when `UPSTREAM.lock` no longer matches the newest upstream release.
 
 ## Linux Scope
 
-WayShine is scoped to Linux hosts only. The imported source tree may still
-contain upstream platform code because removing source files would create a
-larger upgrade burden. WayShine project metadata, docs, automation, and build
-entrypoints stay Linux-focused.
+WayShine is scoped to Linux hosts only. The source tree still contains upstream
+platform code because deleting it would make future merges noisier. WayShine
+metadata, docs, automation, packaging entrypoints, and new feature work should
+stay Linux-focused.
 
 Supported Linux build environments in this baseline:
 
@@ -121,12 +116,10 @@ hosts targeting amd64.
 
 ## Upgrade From Sunshine
 
-Start from a clean `main`, then import the new Sunshine tag:
+Start from a clean `main`, then merge the new Sunshine tag on an upgrade branch:
 
 ```bash
-scripts/wayshine-import-upstream.sh vYYYY.MDD.HHMMSS
-git switch main
-git merge --no-ff upstream-snapshot
+scripts/wayshine-merge-upstream.sh vYYYY.MDD.HHMMSS
 ```
 
 After resolving conflicts:
@@ -135,7 +128,9 @@ After resolving conflicts:
 scripts/wayshine-build-linux.sh
 ```
 
-Update `UPSTREAM.lock` and commit the merge plus lock update together.
+Update `UPSTREAM.lock`, open a pull request into `main`, and keep the merge
+commit visible. Do not squash upstream release merges; preserving the merge
+helps future upgrades.
 
 ## GitHub Automation
 
@@ -145,7 +140,9 @@ Update `UPSTREAM.lock` and commit the merge plus lock update together.
 - `GHCR`: manual or tag-triggered container publication to
   `ghcr.io/neokura/wayshine`. The default GHCR build is also no-CUDA; pass
   custom `linux_build_args` from the workflow dispatch form for heavier builds.
-- Dependabot: GitHub Actions, npm, Dockerfiles, and git submodules.
+- Dependabot: GitHub Actions and Dockerfiles only. Sunshine source
+  dependencies, submodules, and frontend packages are upgraded through upstream
+  Sunshine merges.
 
 There is intentionally no WayShine `localize` workflow yet. Localization remains
 upstream-owned unless WayShine starts maintaining translation changes directly.

@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          current="$(awk -F= '/^upstream_tag=/{print $2}' UPSTREAM.lock)"
+          current="$(awk -F= '/^base_tag=/{print $2}' UPSTREAM.lock)"
           latest_any="$(
             gh release list \
               --repo LizardByte/Sunshine \
@@ -58,7 +58,7 @@ jobs:
             echo "Upgrade command:"
             echo
             echo '```bash'
-            echo "scripts/wayshine-import-upstream.sh ${latest_any}"
+            echo "scripts/wayshine-merge-upstream.sh ${latest_any}"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 

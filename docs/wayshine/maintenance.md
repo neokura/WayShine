@@ -1,60 +1,52 @@
 # WayShine Maintenance
 
-WayShine follows a vendor-branch model so it can absorb future Sunshine releases
-without keeping Sunshine's full commit history.
+WayShine is an official GitHub fork of Sunshine. It preserves Sunshine's full
+Git history so GitHub can keep the fork relationship intact.
 
 ## Invariants
 
 - Stay Linux-only in WayShine CI, packaging, and local tooling.
-- Keep `upstream-snapshot` as imported Sunshine source only.
+- Preserve upstream Sunshine history.
 - Keep WayShine-specific changes on `main` as focused commits.
 - Prefer additive files under `docs/wayshine`, `scripts/wayshine-*`, and
-  `.github/workflows/wayshine-linux.yml`.
+  `.github/workflows`.
 - When upstream files must be changed, keep patches small and explain the Linux
   reason in the commit message.
-- Do not attempt to convert this repository into an official GitHub fork unless
-  the project accepts importing Sunshine's upstream history.
+- Do not update Sunshine submodules, frontend packages, or vendored dependency
+  pins independently of upstream unless a WayShine feature explicitly requires
+  it.
 
 ## Initial Baseline
 
-The first snapshot was imported from Sunshine `v2026.508.45922`.
+WayShine starts from Sunshine `v2026.508.45922`.
 
 ```text
 upstream commit: 810783dc7c7200fcb613c7d0919f6c8a7bbbebb9
-snapshot commit: 4b666914617c406f9e3197dbaf210e808867f8f0
 ```
-
-The snapshot commit has no parent from the Sunshine repository, so pushing this
-repository does not publish Sunshine's commit history.
 
 ## Upgrade Workflow
 
 1. Confirm the new Sunshine tag on the official release page or in the
    `Upstream Release Watch` workflow summary.
 2. Start from a clean tree on `main`.
-3. Import the new source snapshot:
+3. Create an upgrade branch and merge the new upstream tag:
 
 ```bash
-scripts/wayshine-import-upstream.sh vYYYY.MDD.HHMMSS
+scripts/wayshine-merge-upstream.sh vYYYY.MDD.HHMMSS
 ```
 
-4. Merge the updated vendor branch into `main`:
-
-```bash
-git switch main
-git merge --no-ff upstream-snapshot
-```
-
-5. Resolve conflicts by preserving WayShine's Linux-only intent.
-6. Update `UPSTREAM.lock` with the new tag, upstream commit, snapshot commit,
-   and import time.
-7. Run the Linux build matrix:
+4. Resolve conflicts by preserving WayShine's Linux-only intent.
+5. Update `UPSTREAM.lock` with the new base tag, base commit, and sync time.
+6. Run the Linux build matrix:
 
 ```bash
 scripts/wayshine-build-linux.sh
 ```
 
-8. Commit the resolved merge and lock update together.
+7. Open a pull request into `main`.
+
+Do not squash upstream release merges. A visible merge commit makes the next
+Sunshine upgrade easier to reason about.
 
 ## Local Build Stack
 
@@ -66,7 +58,7 @@ scripts/wayshine-build-native-linux.sh
 ```
 
 WayShine's local Docker wrapper targets the Linux container environments present
-in this snapshot:
+in this baseline:
 
 - `ubuntu-22.04`
 - `ubuntu-24.04`
@@ -97,7 +89,7 @@ During an upstream merge, treat conflicts in this order:
 
 1. Keep upstream changes in generic Sunshine code unless they break Linux.
 2. Keep WayShine changes in Linux packaging, Linux CI, and WayShine docs/scripts.
-3. Re-apply local patches as new commits instead of rewriting old snapshot
-   commits.
+3. Re-apply local patches as new commits only when a merge conflict cannot keep
+   the old patch cleanly.
 4. If a Linux-only change becomes unnecessary because Sunshine fixed it
    upstream, remove the local patch in a dedicated commit.

@@ -1,30 +1,32 @@
 # WayShine Fork Notes
 
-WayShine is a private, Linux-only, clean-history fork baseline of
+WayShine is an official GitHub fork of
 [LizardByte/Sunshine](https://github.com/LizardByte/Sunshine).
 
-The repository is intentionally not a GitHub network fork. GitHub requires a
-shared Git history to show the official "forked from" relationship, while this
-project keeps only a parentless source snapshot and local WayShine commits.
-
-This is the correct trade-off for the current requirement: private, clean
-history, Linux-only, and easy to rebase conceptually onto future Sunshine source
-snapshots. If the GitHub fork badge becomes mandatory, the project must give up
-the "no upstream history" constraint and be recreated as a normal GitHub fork.
+The project preserves upstream Sunshine history because GitHub requires shared
+history to display and maintain the `forked from LizardByte/Sunshine`
+relationship.
 
 ## Current Upstream
 
 - Upstream repo: `https://github.com/LizardByte/Sunshine.git`
-- Imported tag: `v2026.508.45922`
-- Upstream commit: `810783dc7c7200fcb613c7d0919f6c8a7bbbebb9`
-- Snapshot branch: `upstream-snapshot`
+- GitHub parent: `LizardByte/Sunshine`
+- Base tag: `v2026.508.45922`
+- Base commit: `810783dc7c7200fcb613c7d0919f6c8a7bbbebb9`
+- Upstream default branch: `master`
+- WayShine branch: `main`
 
 ## Branch Model
 
-- `upstream-snapshot`: source snapshots imported from Sunshine with
-  `scripts/wayshine-import-upstream.sh`. Do not edit this branch manually.
-- `main`: WayShine's Linux-only branch. Keep project-specific changes as small,
-  reviewable commits on top of the imported snapshot.
+- `master`: inherited fork branch matching upstream's default branch.
+- `main`: WayShine's Linux-only working branch, currently based on
+  `v2026.508.45922`.
+- `upgrade/sunshine-*`: temporary branches created by
+  `scripts/wayshine-merge-upstream.sh` for upstream release merges.
+
+Keep project-specific changes as small, reviewable commits on top of Sunshine.
+When Sunshine releases a new version, merge the release tag into an upgrade
+branch and review conflicts deliberately.
 
 For the full upgrade workflow, see `docs/wayshine/maintenance.md`.
 
