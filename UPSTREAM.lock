@@ -1,0 +1,8 @@
+upstream_name=Sunshine
+upstream_repo=https://github.com/LizardByte/Sunshine.git
+upstream_tag=v2026.508.45922
+upstream_commit=810783dc7c7200fcb613c7d0919f6c8a7bbbebb9
+snapshot_branch=upstream-snapshot
+snapshot_commit=4b666914617c406f9e3197dbaf210e808867f8f0
+imported_at_utc=2026-05-12T20:13:16Z
+import_policy=clean-history vendor branch; no upstream Sunshine parents are retained

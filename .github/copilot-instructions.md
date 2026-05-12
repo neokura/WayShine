@@ -1,11 +1,18 @@
-On Windows we use msys2 and ucrt64 to compile.
-You need to prefix commands with `C:\msys64\msys2_shell.cmd -defterm -here -no-start -ucrt64 -c`.
+WayShine is a Linux-only, clean-history fork baseline of LizardByte/Sunshine.
+
+Keep platform-specific changes focused on Linux. Do not add Windows, macOS,
+FreeBSD, Homebrew, Winget, or Pacman release automation unless the project scope
+changes explicitly.
+
+Use `upstream-snapshot` only for imported Sunshine source snapshots. WayShine
+changes belong on `main` as small commits that can be reviewed and replayed
+during future upstream upgrades.
 
 Prefix build directories with `cmake-build-`.
 
-The test executable is named `test_sunshine` and will be located inside the `tests` directory within
-the build directory.
+The test executable is named `test_sunshine` and is located inside the `tests`
+directory within the build directory.
 
 The project uses gtest as a test framework.
 
-Always follow the style guidelines defined in .clang-format for c/c++ code.
+Always follow the style guidelines defined in `.clang-format` for C/C++ code.

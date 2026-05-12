@@ -1,0 +1,49 @@
+---
+name: WayShine Linux
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docker-linux:
+    name: ${{ matrix.target }} / ${{ matrix.platform }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ubuntu-22.04
+            platform: linux/amd64
+          - target: ubuntu-24.04
+            platform: linux/amd64
+          - target: ubuntu-26.04
+            platform: linux/amd64
+          - target: debian-trixie
+            platform: linux/amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+
+      - name: Build Linux image
+        env:
+          WAYSHINE_PLATFORM: ${{ matrix.platform }}
+          WAYSHINE_LOAD_IMAGE: "0"
+        run: |
+          scripts/wayshine-build-linux.sh "${{ matrix.target }}"
