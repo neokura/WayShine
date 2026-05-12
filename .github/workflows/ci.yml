@@ -44,6 +44,8 @@ jobs:
       - name: Build Linux image
         env:
           WAYSHINE_PLATFORM: ${{ matrix.platform }}
+          WAYSHINE_BUILD_TARGET: sunshine-build
+          WAYSHINE_LINUX_BUILD_ARGS: "--skip-cuda"
           WAYSHINE_LOAD_IMAGE: "0"
         run: |
           scripts/wayshine-build-linux.sh "${{ matrix.target }}"

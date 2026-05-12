@@ -11,6 +11,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 FROM sunshine-base AS sunshine-deps
 
+ARG WAYSHINE_LINUX_BUILD_ARGS=""
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Copy only the build script first for better layer caching
@@ -25,7 +27,8 @@ chmod +x ./scripts/linux_build.sh
 ./scripts/linux_build.sh \
   --step=deps \
   --ubuntu-test-repo \
-  --sudo-off
+  --sudo-off \
+  ${WAYSHINE_LINUX_BUILD_ARGS}
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 _DEPS
@@ -35,11 +38,13 @@ FROM sunshine-deps AS sunshine-build
 ARG BRANCH
 ARG BUILD_VERSION
 ARG COMMIT
+ARG WAYSHINE_LINUX_BUILD_ARGS=""
 # note: BUILD_VERSION may be blank
 
 ENV BRANCH=${BRANCH}
 ENV BUILD_VERSION=${BUILD_VERSION}
 ENV COMMIT=${COMMIT}
+ENV WAYSHINE_LINUX_BUILD_ARGS=${WAYSHINE_LINUX_BUILD_ARGS}
 
 # Now copy the full repository
 COPY --link .. .
@@ -53,19 +58,23 @@ set -e
   --publisher-name='LizardByte' \
   --publisher-website='https://app.lizardbyte.dev' \
   --publisher-issue-url='https://app.lizardbyte.dev/support' \
-  --sudo-off
+  --sudo-off \
+  ${WAYSHINE_LINUX_BUILD_ARGS}
 
 ./scripts/linux_build.sh \
   --step=validation \
-  --sudo-off
+  --sudo-off \
+  ${WAYSHINE_LINUX_BUILD_ARGS}
 
 ./scripts/linux_build.sh \
   --step=build \
-  --sudo-off
+  --sudo-off \
+  ${WAYSHINE_LINUX_BUILD_ARGS}
 
 ./scripts/linux_build.sh \
   --step=package \
-  --sudo-off
+  --sudo-off \
+  ${WAYSHINE_LINUX_BUILD_ARGS}
 _BUILD
 
 # run tests

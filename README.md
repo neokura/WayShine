@@ -88,9 +88,18 @@ Initialize dependencies after cloning:
 git submodule update --init --recursive --depth 1
 ```
 
-Build the Docker Linux matrix:
+Build the Docker Linux matrix. By default this uses the Dockerfiles as imported
+from Sunshine, including CUDA setup when enabled by the build script:
 
 ```bash
+scripts/wayshine-build-linux.sh
+```
+
+Run the lighter CI-style matrix without CUDA:
+
+```bash
+WAYSHINE_BUILD_TARGET=sunshine-build \
+WAYSHINE_LINUX_BUILD_ARGS="--skip-cuda" \
 scripts/wayshine-build-linux.sh
 ```
 
@@ -130,10 +139,12 @@ Update `UPSTREAM.lock` and commit the merge plus lock update together.
 
 ## GitHub Automation
 
-- `CI`: Linux Docker build matrix.
+- `CI`: Linux Docker build matrix without CUDA, so every push validates the
+  project without exhausting GitHub-hosted runner disk.
 - `Upstream Release Watch`: scheduled/manual check against Sunshine releases.
 - `GHCR`: manual or tag-triggered container publication to
-  `ghcr.io/neokura/wayshine`.
+  `ghcr.io/neokura/wayshine`. The default GHCR build is also no-CUDA; pass
+  custom `linux_build_args` from the workflow dispatch form for heavier builds.
 - Dependabot: GitHub Actions, npm, Dockerfiles, and git submodules.
 
 There is intentionally no WayShine `localize` workflow yet. Localization remains

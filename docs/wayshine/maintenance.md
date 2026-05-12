@@ -80,6 +80,9 @@ for reliable cross-platform builds, especially from arm64 hosts targeting amd64.
 ## GitHub Workflows
 
 - `CI`: builds the Linux Docker matrix on pushes and pull requests.
+- The default CI build passes `--skip-cuda` and targets `sunshine-build` so
+  ordinary pushes do not download the multi-GB CUDA runfile on GitHub-hosted
+  runners.
 - `Upstream Release Watch`: scheduled/manual release check against
   `LizardByte/Sunshine`.
 - `GHCR`: manual or tag-triggered image publication to

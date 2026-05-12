@@ -8,6 +8,11 @@ on:
         description: "Image version tag. Defaults to manual-<run_number>."
         required: false
         type: string
+      linux_build_args:
+        description: "Extra scripts/linux_build.sh args. Default keeps images lightweight."
+        required: false
+        default: "--skip-cuda"
+        type: string
   push:
     tags:
       - "wayshine-v*"
@@ -21,6 +26,8 @@ jobs:
     name: ${{ matrix.target }} / ${{ matrix.platform }}
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      LINUX_BUILD_ARGS: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_build_args || '--skip-cuda' }}
     strategy:
       fail-fast: false
       matrix:
@@ -90,6 +97,7 @@ jobs:
             --build-arg "BRANCH=${GITHUB_REF_NAME}" \
             --build-arg "BUILD_VERSION=${{ steps.tags.outputs.version }}" \
             --build-arg "COMMIT=${GITHUB_SHA}" \
+            --build-arg "WAYSHINE_LINUX_BUILD_ARGS=${LINUX_BUILD_ARGS}" \
             --file "docker/${{ matrix.target }}.dockerfile" \
             --push \
             "${tags[@]}" \

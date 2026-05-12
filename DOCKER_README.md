@@ -11,6 +11,14 @@ Build every supported Linux target:
 scripts/wayshine-build-linux.sh
 ```
 
+Build the lighter CI-style matrix without CUDA:
+
+```bash
+WAYSHINE_BUILD_TARGET=sunshine-build \
+WAYSHINE_LINUX_BUILD_ARGS="--skip-cuda" \
+scripts/wayshine-build-linux.sh
+```
+
 Build one target:
 
 ```bash
@@ -39,7 +47,9 @@ Mount persistent configuration at `/config`.
 ## GHCR
 
 The `GHCR` workflow publishes images manually or from tags matching
-`wayshine-v*`.
+`wayshine-v*`. By default it passes `--skip-cuda` to keep GitHub-hosted builds
+within runner disk limits. Use the workflow dispatch `linux_build_args` input
+for heavier CUDA-enabled builds on a suitable runner.
 
 Expected image names:
 

@@ -20,6 +20,8 @@ Environment:
   WAYSHINE_BUILD_TARGET   Docker target, default: sunshine
   WAYSHINE_LOAD_IMAGE     Use --load with buildx, default: 1
   WAYSHINE_NO_CACHE       Set to 1 to disable cache
+  WAYSHINE_LINUX_BUILD_ARGS
+                         Extra arguments passed to scripts/linux_build.sh
 EOF
 }
 
@@ -38,6 +40,7 @@ platform="${WAYSHINE_PLATFORM:-linux/amd64}"
 build_target="${WAYSHINE_BUILD_TARGET:-sunshine}"
 load_image="${WAYSHINE_LOAD_IMAGE:-1}"
 no_cache="${WAYSHINE_NO_CACHE:-0}"
+linux_build_args="${WAYSHINE_LINUX_BUILD_ARGS:-}"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 commit="$(git rev-parse HEAD)"
@@ -75,6 +78,7 @@ for target in "${targets[@]}"; do
     --build-arg "BRANCH=${branch}" \
     --build-arg "BUILD_VERSION=${version}" \
     --build-arg "COMMIT=${commit}" \
+    --build-arg "WAYSHINE_LINUX_BUILD_ARGS=${linux_build_args}" \
     --tag "$image" \
     --file "$dockerfile" \
     .
