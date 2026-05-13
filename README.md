@@ -17,17 +17,13 @@ releases.
 ## Fork Model
 
 This repository preserves Sunshine's Git history so GitHub can track it as a
-real fork. That is intentional and now takes priority over the earlier
-clean-history idea.
+real fork.
 
 - GitHub parent: `LizardByte/Sunshine`
 - Upstream remote: `https://github.com/LizardByte/Sunshine.git`
 - Upstream default branch: `master`
 - WayShine default branch: `main`
 - WayShine baseline: `v2026.508.45922`
-
-The old clean-history experiment was renamed to
-`neokura/WayShine-clean-history` and should be treated as backup only.
 
 ## Current Baseline
 
@@ -110,6 +106,24 @@ Run a native Linux build:
 scripts/wayshine-build-native-linux.sh
 ```
 
+## GitHub CLI
+
+Use the project helper when you want the remote GitHub checks to be the source
+of truth:
+
+```bash
+scripts/wayshine-gh.sh status
+scripts/wayshine-gh.sh ci
+scripts/wayshine-gh.sh upstream-watch
+scripts/wayshine-gh.sh watch
+```
+
+Publish Linux images manually with:
+
+```bash
+scripts/wayshine-gh.sh ghcr main wayshine-vYYYY.MDD.HHMMSS --skip-cuda
+```
+
 On hosts without `docker buildx`, the Docker wrapper falls back to `docker
 build`. Install buildx for reliable cross-platform builds, especially from arm64
 hosts targeting amd64.
@@ -140,6 +154,8 @@ helps future upgrades.
 - `GHCR`: manual or tag-triggered container publication to
   `ghcr.io/neokura/wayshine`. The default GHCR build is also no-CUDA; pass
   custom `linux_build_args` from the workflow dispatch form for heavier builds.
+- `scripts/wayshine-gh.sh`: GitHub CLI wrapper for status, workflow dispatch,
+  and run watching.
 - Dependabot: GitHub Actions and Dockerfiles only. Sunshine source
   dependencies, submodules, and frontend packages are upgraded through upstream
   Sunshine merges.

@@ -14,8 +14,8 @@ fork line.
 
 ## Fork Reality
 
-This repository is a real GitHub fork. Do not return to the clean-history model
-unless the user explicitly gives up the official fork relationship.
+This repository is a real GitHub fork. Preserve that model and the shared
+Sunshine history.
 
 Use these files as the source of truth:
 
@@ -56,6 +56,14 @@ Run a native Linux build:
 
 ```bash
 scripts/wayshine-build-native-linux.sh
+```
+
+Check and run remote GitHub workflows:
+
+```bash
+scripts/wayshine-gh.sh status
+scripts/wayshine-gh.sh ci
+scripts/wayshine-gh.sh watch
 ```
 
 ## Upgrade Command

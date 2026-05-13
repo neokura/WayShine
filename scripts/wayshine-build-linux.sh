@@ -44,7 +44,7 @@ linux_build_args="${WAYSHINE_LINUX_BUILD_ARGS:-}"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 commit="$(git rev-parse HEAD)"
-version="$(awk -F= '/^upstream_tag=/{print $2}' UPSTREAM.lock 2>/dev/null || true)"
+version="$(awk -F= '/^base_tag=/{print $2}' UPSTREAM.lock 2>/dev/null || true)"
 version="${version:-dev}"
 
 if docker buildx version >/dev/null 2>&1; then

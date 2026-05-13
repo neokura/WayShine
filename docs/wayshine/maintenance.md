@@ -45,6 +45,13 @@ scripts/wayshine-build-linux.sh
 
 7. Open a pull request into `main`.
 
+For remote validation through GitHub Actions:
+
+```bash
+scripts/wayshine-gh.sh ci
+scripts/wayshine-gh.sh watch
+```
+
 Do not squash upstream release merges. A visible merge commit makes the next
 Sunshine upgrade easier to reason about.
 
@@ -79,6 +86,8 @@ for reliable cross-platform builds, especially from arm64 hosts targeting amd64.
   `LizardByte/Sunshine`.
 - `GHCR`: manual or tag-triggered image publication to
   `ghcr.io/neokura/wayshine`.
+- `scripts/wayshine-gh.sh`: local GitHub CLI wrapper for workflow status,
+  dispatch, and run watching.
 
 There is no `localize` workflow in WayShine yet. Adding one before WayShine owns
 translation changes would create maintenance noise and a misleading badge.
