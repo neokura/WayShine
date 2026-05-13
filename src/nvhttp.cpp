@@ -878,10 +878,10 @@ namespace nvhttp {
 #ifdef __linux__
       if (config::video.linux_vdisplay.enabled) {
         const auto lease_result = display_device::prepare_display_for_session(config::video, *launch_session);
-        if (const auto *error = std::get_if<std::string>(&lease_result)) {
-          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected stream: " << *error;
+        if (const auto *preflight_error = std::get_if<std::string>(&lease_result)) {
+          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected stream: " << *preflight_error;
           tree.put("root.<xmlattr>.status_code", 503);
-          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *error);
+          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *preflight_error);
           tree.put("root.gamesession", 0);
 
           return;
@@ -996,11 +996,11 @@ namespace nvhttp {
 #ifdef __linux__
       if (config::video.linux_vdisplay.enabled) {
         const auto lease_result = display_device::prepare_display_for_session(config::video, *launch_session);
-        if (const auto *error = std::get_if<std::string>(&lease_result)) {
-          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected resume: " << *error;
+        if (const auto *preflight_error = std::get_if<std::string>(&lease_result)) {
+          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected resume: " << *preflight_error;
           tree.put("root.resume", 0);
           tree.put("root.<xmlattr>.status_code", 503);
-          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *error);
+          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *preflight_error);
 
           return;
         }

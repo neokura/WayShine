@@ -8,9 +8,6 @@
 #include "src/logging.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/process/v1/child.hpp>
-#include <boost/process/v1/io.hpp>
-#include <boost/process/v1/search_path.hpp>
 
 #include <algorithm>
 #include <array>
@@ -22,9 +19,9 @@
 #include <regex>
 #include <sstream>
 #include <sys/wait.h>
+#include <unistd.h>
 
 namespace display_device::linux_vdisplay {
-  namespace bp = boost::process::v1;
   using namespace std::literals;
 
   namespace {
@@ -95,7 +92,29 @@ namespace display_device::linux_vdisplay {
     }
 
     bool command_exists(const std::string &command) {
-      return !bp::search_path(command).empty();
+      if (command.find('/') != std::string::npos) {
+        return ::access(command.c_str(), X_OK) == 0;
+      }
+
+      const char *path_env = std::getenv("PATH");
+      if (!path_env) {
+        return false;
+      }
+
+      std::stringstream paths {path_env};
+      std::string dir;
+      while (std::getline(paths, dir, ':')) {
+        if (dir.empty()) {
+          dir = ".";
+        }
+
+        const auto candidate = std::filesystem::path {dir} / command;
+        if (::access(candidate.c_str(), X_OK) == 0) {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     std::vector<std::string> read_lines(const std::filesystem::path &path) {
