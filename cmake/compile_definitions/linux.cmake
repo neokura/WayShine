@@ -351,6 +351,8 @@ list(APPEND PLATFORM_TARGET_FILES
         "${CMAKE_SOURCE_DIR}/src/platform/linux/graphics.cpp"
         "${CMAKE_SOURCE_DIR}/src/platform/linux/misc.h"
         "${CMAKE_SOURCE_DIR}/src/platform/linux/misc.cpp"
+        "${CMAKE_SOURCE_DIR}/src/platform/linux/virtual_display.h"
+        "${CMAKE_SOURCE_DIR}/src/platform/linux/virtual_display.cpp"
         "${CMAKE_SOURCE_DIR}/src/platform/linux/audio.cpp")
 
 list(APPEND PLATFORM_LIBRARIES

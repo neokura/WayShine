@@ -7,6 +7,9 @@
 // standard includes
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <string>
+#include <variant>
 
 // lib includes
 #include <display_device/types.h>
@@ -25,6 +28,23 @@ namespace rtsp_stream {
 }
 
 namespace display_device {
+  /**
+   * @brief Result of a strict synchronous display preflight.
+   */
+  struct VirtualDisplayLease {
+    bool valid {};
+    std::string connector;
+    std::string mode;
+  };
+
+  /**
+   * @brief Strictly prepare the display before app launch and capture.
+   *
+   * This is intentionally synchronous. When WayShine Linux virtual display is enabled
+   * with exact mode policy, callers must reject the stream if this returns an error.
+   */
+  [[nodiscard]] std::variant<VirtualDisplayLease, std::string> prepare_display_for_session(const config::video_t &video_config, const rtsp_stream::launch_session_t &session);
+
   /**
    * @brief Initialize the implementation and perform the initial state recovery (if needed).
    * @param persistence_filepath File location for reading/saving persistent state.

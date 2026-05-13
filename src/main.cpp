@@ -27,6 +27,10 @@
 #include "upnp.h"
 #include "video.h"
 
+#ifdef __linux__
+  #include "platform/linux/virtual_display.h"
+#endif
+
 extern "C" {
 #include "rswrapper.h"
 }
@@ -59,6 +63,50 @@ std::map<std::string_view, std::function<int(const char *name, int argc, char **
 #ifdef _WIN32
   {"restore-nvprefs-undo"sv, [](const char *name, int argc, char **argv) {
      return args::restore_nvprefs_undo();
+   }},
+#endif
+#ifdef __linux__
+  {"linux-vdisplay-doctor"sv, []([[maybe_unused]] const char *name, int argc, char **argv) {
+     bool json_output = false;
+     for (int i = 0; i < argc; ++i) {
+       if (std::string_view {argv[i]} == "--json"sv) {
+         json_output = true;
+       }
+     }
+     return display_device::linux_vdisplay::LinuxVirtualDisplayDoctor(config::video).run(json_output);
+   }},
+  {"linux-vdisplay-install"sv, []([[maybe_unused]] const char *name, int argc, char **argv) {
+     std::string connector;
+     std::string profile {"sdr-default"};
+     for (int i = 0; i < argc; ++i) {
+       const std::string_view arg {argv[i]};
+       if (arg == "--connector"sv && i + 1 < argc) {
+         connector = argv[++i];
+       } else if (arg == "--profile"sv && i + 1 < argc) {
+         profile = argv[++i];
+       }
+     }
+     const auto result = display_device::linux_vdisplay::LinuxVirtualDisplayProvisioner::install(connector, profile);
+     if (!result) {
+       std::cerr << result.error() << '\n';
+       return 2;
+     }
+     return 0;
+   }},
+  {"linux-vdisplay-remove"sv, []([[maybe_unused]] const char *name, int argc, char **argv) {
+     std::string connector;
+     for (int i = 0; i < argc; ++i) {
+       const std::string_view arg {argv[i]};
+       if (arg == "--connector"sv && i + 1 < argc) {
+         connector = argv[++i];
+       }
+     }
+     const auto result = display_device::linux_vdisplay::LinuxVirtualDisplayProvisioner::remove(connector);
+     if (!result) {
+       std::cerr << result.error() << '\n';
+       return 2;
+     }
+     return 0;
    }},
 #endif
 };

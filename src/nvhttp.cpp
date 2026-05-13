@@ -875,6 +875,19 @@ namespace nvhttp {
       // We want to prepare display only if there are no active sessions at
       // the moment. This should be done before probing encoders as it could
       // change the active displays.
+#ifdef __linux__
+      if (config::video.linux_vdisplay.enabled) {
+        const auto lease_result = display_device::prepare_display_for_session(config::video, *launch_session);
+        if (const auto *error = std::get_if<std::string>(&lease_result)) {
+          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected stream: " << *error;
+          tree.put("root.<xmlattr>.status_code", 503);
+          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *error);
+          tree.put("root.gamesession", 0);
+
+          return;
+        }
+      }
+#endif
       display_device::configure_display(config::video, *launch_session);
 
       // Probe encoders again before streaming to ensure our chosen
@@ -980,6 +993,19 @@ namespace nvhttp {
       // We want to prepare display only if there are no active sessions at
       // the moment. This should be done before probing encoders as it could
       // change the active displays.
+#ifdef __linux__
+      if (config::video.linux_vdisplay.enabled) {
+        const auto lease_result = display_device::prepare_display_for_session(config::video, *launch_session);
+        if (const auto *error = std::get_if<std::string>(&lease_result)) {
+          BOOST_LOG(error) << "WayShine Linux virtual display preflight rejected resume: " << *error;
+          tree.put("root.resume", 0);
+          tree.put("root.<xmlattr>.status_code", 503);
+          tree.put("root.<xmlattr>.status_message", "WayShine Linux virtual display preflight failed: " + *error);
+
+          return;
+        }
+      }
+#endif
       display_device::configure_display(config::video, *launch_session);
 
       // Probe encoders again before streaming to ensure our chosen

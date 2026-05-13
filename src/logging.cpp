@@ -263,6 +263,11 @@ namespace logging {
       << "    --help                    | print help"sv << std::endl
       << "    --creds username password | set user credentials for the Web manager"sv << std::endl
       << "    --version                 | print the version of sunshine"sv << std::endl
+#ifdef __linux__
+      << "    --linux-vdisplay-doctor [--json] | diagnose WayShine Linux virtual display"sv << std::endl
+      << "    --linux-vdisplay-install --connector NAME --profile sdr-default | install WayShine EDID profile"sv << std::endl
+      << "    --linux-vdisplay-remove --connector NAME | remove WayShine EDID kernel args/files"sv << std::endl
+#endif
       << std::endl
       << "    flags"sv << std::endl
       << "        -0 | Read PIN from stdin"sv << std::endl

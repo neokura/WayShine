@@ -524,6 +524,15 @@ namespace config {
       {}  // wa
     },  // display_device
 
+    {
+      false,  // enabled
+      {},  // connector
+      "sdr-default",  // profile
+      "kscreen_doctor",  // backend
+      "exact",  // mode_policy
+      true  // restore_on_startup
+    },  // linux_vdisplay
+
     0,  // max_bitrate
     0  // minimum_fps_target (0 = framerate)
   };
@@ -1195,6 +1204,13 @@ namespace config {
       int_between_f(vars, "dd_wa_hdr_toggle_delay", value, {0, 3000});
       video.dd.wa.hdr_toggle_delay = std::chrono::milliseconds {value};
     }
+
+    bool_f(vars, "linux_vdisplay_enabled", video.linux_vdisplay.enabled);
+    string_f(vars, "linux_vdisplay_connector", video.linux_vdisplay.connector);
+    string_f(vars, "linux_vdisplay_profile", video.linux_vdisplay.profile);
+    string_f(vars, "linux_vdisplay_backend", video.linux_vdisplay.backend);
+    string_f(vars, "linux_vdisplay_mode_policy", video.linux_vdisplay.mode_policy);
+    bool_f(vars, "linux_vdisplay_restore_on_startup", video.linux_vdisplay.restore_on_startup);
 
     int_f(vars, "max_bitrate", video.max_bitrate);
     double_between_f(vars, "minimum_fps_target", video.minimum_fps_target, {0.0, 1000.0});

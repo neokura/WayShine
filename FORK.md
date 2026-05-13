@@ -28,6 +28,13 @@ Keep project-specific changes as small, reviewable commits on top of Sunshine.
 When Sunshine releases a new version, merge the release tag into an upgrade
 branch and review conflicts deliberately.
 
+## Fork Feature Boundary
+
+WayShine's only product divergence from Sunshine is the Linux virtual display
+path for Moonlight. The v1 implementation is KDE Wayland/NVIDIA focused, uses a
+boot-time SDR EDID profile, and rejects missing exact modes before capture rather
+than falling back to physical displays.
+
 For the full upgrade workflow, see `docs/wayshine/maintenance.md`.
 
 ## GitHub Integration

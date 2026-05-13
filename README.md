@@ -6,18 +6,133 @@
 [![Upstream Sunshine](https://img.shields.io/github/v/release/LizardByte/Sunshine?include_prereleases&label=upstream%20Sunshine)](https://github.com/LizardByte/Sunshine/releases)
 ![Base](https://img.shields.io/badge/base-v2026.508.45922-blue)
 
-WayShine is the official GitHub fork of
-[LizardByte/Sunshine](https://github.com/LizardByte/Sunshine) used for a
-Linux-only fork line.
+WayShine is a light Linux-focused fork of
+[Sunshine](https://github.com/LizardByte/Sunshine).
 
-The goal is to build a major Linux-focused feature on top of Sunshine while
-keeping the WayShine patch surface small enough to merge future Sunshine
-releases.
+Its only product goal is to add native Linux virtual display management for
+Moonlight streaming while keeping Sunshine's upstream architecture, history, and
+upgrade path intact.
+
+## What WayShine Adds
+
+WayShine adds a strict Linux virtual display path on top of Sunshine's existing
+`display_device` layer.
+
+The v1 implementation targets:
+
+- Linux hosts
+- KDE Plasma Wayland
+- NVIDIA proprietary driver
+- boot-time SDR EDID virtual display
+- exact mode switching before capture
+- explicit failure when the requested Moonlight mode is unavailable
+
+The important product rule is:
+
+> WayShine v1 supports exact client resolutions only if they are predeclared in
+> the installed EDID profile. Missing modes fail explicitly; there is no silent
+> fallback to physical displays or 1080p.
+
+## What WayShine Does Not Add
+
+WayShine is intentionally not a broad rewrite of Sunshine.
+
+The v1 scope does not include:
+
+- arbitrary dynamic resolutions
+- runtime EDID regeneration
+- Apollo/SudoVDA-style hotplug display creation
+- HDR virtual display support
+- Windows or macOS virtual display features
+- a parallel capture or encoder stack
+
+Encoder internals stay upstream Sunshine unless a virtual display integration
+bug proves otherwise.
+
+## Linux Virtual Display Model
+
+The v1 model uses a known-good SDR EDID profile loaded by the kernel at boot:
+
+```text
+drm.edid_firmware=<CONNECTOR>:edid/<EDID_FILE> video=<CONNECTOR>:e
+```
+
+At stream launch, WayShine performs a synchronous preflight before app launch
+and before capture:
+
+1. Parse the requested Moonlight resolution and FPS through Sunshine's
+   `display_device` configuration path.
+2. Verify the requested mode exists in the installed EDID profile.
+3. Verify the mode is visible in `/sys/class/drm/<connector>/modes`.
+4. Map the DRM connector to a KDE/KScreen output.
+5. Apply the mode atomically through the P0 KDE backend.
+6. Verify the applied mode before allowing capture to continue.
+
+If any step is ambiguous or fails, the stream is rejected.
+
+## P0 Backend
+
+The first KDE Wayland backend is intentionally conservative:
+
+- `kscreen-doctor` is used as the P0 display-control backend.
+- It is wrapped behind WayShine's `LinuxDisplayControlBackend` abstraction.
+- A later native helper linked against libkscreen can replace it without
+  changing Sunshine integration points.
+- Direct GDBus KScreen control is out of the critical path until a dedicated
+  proof of concept validates stability, atomicity, and restore behavior.
+
+This keeps the first implementation practical while avoiding a dependency on an
+undocumented DBus contract.
+
+## CLI
+
+Diagnose the virtual display setup:
+
+```bash
+wayshine --linux-vdisplay-doctor
+wayshine --linux-vdisplay-doctor --json
+```
+
+Install the bundled SDR EDID profile on a mutable Fedora-style system:
+
+```bash
+sudo wayshine --linux-vdisplay-install --connector DP-2 --profile sdr-default
+```
+
+Remove the installed profile and kernel args:
+
+```bash
+sudo wayshine --linux-vdisplay-remove --connector DP-2
+```
+
+Bazzite and other rpm-ostree systems are treated as partially supported in P0.
+The doctor can report the state, but automated persistence of EDID firmware,
+initramfs, and kernel args is not considered verified yet.
+
+## Configuration
+
+Minimal virtual display options:
+
+```ini
+linux_vdisplay_enabled = enabled
+linux_vdisplay_connector = DP-2
+linux_vdisplay_profile = sdr-default
+linux_vdisplay_backend = kscreen_doctor
+linux_vdisplay_mode_policy = exact
+linux_vdisplay_restore_on_startup = enabled
+```
+
+WayShine reuses Sunshine's existing `dd_*` display-device options for
+resolution, refresh rate, primary display, only-display, and revert behavior.
+
+For strict capture mapping, either set `output_name` to the virtual connector
+or use a `dd_configuration_option` that makes the virtual output primary or the
+only active display.
 
 ## Fork Model
 
-This repository preserves Sunshine's Git history so GitHub can track it as a
-real fork.
+WayShine preserves Sunshine's Git history so GitHub can maintain the official
+fork relationship.
 
 - GitHub parent: `LizardByte/Sunshine`
 - Upstream remote: `https://github.com/LizardByte/Sunshine.git`
@@ -25,51 +140,8 @@ real fork.
 - WayShine default branch: `main`
 - WayShine baseline: `v2026.508.45922`
 
-## Current Baseline
-
-- Sunshine tag: `v2026.508.45922`
-- Sunshine commit: `810783dc7c7200fcb613c7d0919f6c8a7bbbebb9`
-- WayShine branch: `main`
-
-Check upstream releases with:
-
-```bash
-gh release list --repo LizardByte/Sunshine --limit 5
-```
-
-The scheduled `Upstream Release Watch` workflow performs the same check and
-warns when `UPSTREAM.lock` no longer matches the newest upstream release.
-
-## Linux Scope
-
-WayShine is scoped to Linux hosts only. The source tree still contains upstream
-platform code because deleting it would make future merges noisier. WayShine
-metadata, docs, automation, packaging entrypoints, and new feature work should
-stay Linux-focused.
-
-Supported Linux build environments in this baseline:
-
-- Ubuntu 22.04
-- Ubuntu 24.04
-- Ubuntu 26.04
-- Debian Trixie
-- Native Debian-based, Fedora-based, and Arch-based systems through
-  `scripts/linux_build.sh`
-
-Useful Linux capture paths:
-
-- KMS/DRM
-- X11
-- NvFBC on X11
-- Wayland wlroots
-- XDG Desktop Portal capture
-
-Useful Linux encoding paths:
-
-- NVENC
-- VAAPI
-- Vulkan Video where supported by drivers
-- software encoding
+Project-specific changes should remain small, Linux-scoped, and easy to review
+on top of Sunshine.
 
 ## Build
 
@@ -79,8 +151,7 @@ Initialize dependencies after cloning:
 git submodule update --init --recursive --depth 1
 ```
 
-Build the Docker Linux matrix. By default this uses the Dockerfiles as imported
-from Sunshine, including CUDA setup when enabled by the build script:
+Run the Linux Docker matrix:
 
 ```bash
 scripts/wayshine-build-linux.sh
@@ -94,83 +165,35 @@ WAYSHINE_LINUX_BUILD_ARGS="--skip-cuda" \
 scripts/wayshine-build-linux.sh
 ```
 
-Build one target:
-
-```bash
-scripts/wayshine-build-linux.sh ubuntu-24.04
-```
-
 Run a native Linux build:
 
 ```bash
 scripts/wayshine-build-native-linux.sh
 ```
 
-## GitHub CLI
+## Upgrading From Sunshine
 
-Use the project helper when you want the remote GitHub checks to be the source
-of truth:
-
-```bash
-scripts/wayshine-gh.sh status
-scripts/wayshine-gh.sh ci
-scripts/wayshine-gh.sh upstream-watch
-scripts/wayshine-gh.sh watch
-```
-
-Publish Linux images manually with:
-
-```bash
-scripts/wayshine-gh.sh ghcr main wayshine-vYYYY.MDD.HHMMSS --skip-cuda
-```
-
-On hosts without `docker buildx`, the Docker wrapper falls back to `docker
-build`. Install buildx for reliable cross-platform builds, especially from arm64
-hosts targeting amd64.
-
-## Upgrade From Sunshine
-
-Start from a clean `main`, then merge the new Sunshine tag on an upgrade branch:
+Start from a clean `main`, then merge a new Sunshine release tag on an upgrade
+branch:
 
 ```bash
 scripts/wayshine-merge-upstream.sh vYYYY.MDD.HHMMSS
 ```
 
-After resolving conflicts:
+After resolving conflicts, run the Linux build matrix and update
+`UPSTREAM.lock`. Do not squash upstream release merges; visible merge commits
+make future Sunshine upgrades easier.
 
-```bash
-scripts/wayshine-build-linux.sh
-```
-
-Update `UPSTREAM.lock`, open a pull request into `main`, and keep the merge
-commit visible. Do not squash upstream release merges; preserving the merge
-helps future upgrades.
-
-## GitHub Automation
-
-- `CI`: Linux Docker build matrix without CUDA, so every push validates the
-  project without exhausting GitHub-hosted runner disk.
-- `Upstream Release Watch`: scheduled/manual check against Sunshine releases.
-- `GHCR`: manual or tag-triggered container publication to
-  `ghcr.io/neokura/wayshine`. The default GHCR build is also no-CUDA; pass
-  custom `linux_build_args` from the workflow dispatch form for heavier builds.
-- `scripts/wayshine-gh.sh`: GitHub CLI wrapper for status, workflow dispatch,
-  and run watching.
-- Dependabot: GitHub Actions and Dockerfiles only. Sunshine source
-  dependencies, submodules, and frontend packages are upgraded through upstream
-  Sunshine merges.
-
-There is intentionally no WayShine `localize` workflow yet. Localization remains
-upstream-owned unless WayShine starts maintaining translation changes directly.
+For the full workflow, see `docs/wayshine/maintenance.md`.
 
 ## Agent Entry Points
 
 For a fresh Codex or Copilot agent, read these first:
 
 - `AGENTS.md`
-- `UPSTREAM.lock`
 - `FORK.md`
+- `UPSTREAM.lock`
 - `docs/wayshine/maintenance.md`
 
-Do not reintroduce non-Linux release automation unless the project scope changes
-explicitly.
+Do not add unrelated fork features. WayShine should stay a small Sunshine fork
+focused on native Linux virtual display management.

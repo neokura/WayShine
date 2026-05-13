@@ -26,6 +26,9 @@
   #include <display_device/windows/win_api_layer.h>
   #include <display_device/windows/win_display_device.h>
 #endif
+#ifdef __linux__
+  #include "platform/linux/virtual_display.h"
+#endif
 
 namespace display_device {
   namespace {
@@ -624,6 +627,11 @@ namespace display_device {
           .m_hdr_blank_delay = video_config.dd.wa.hdr_toggle_delay != std::chrono::milliseconds::zero() ? std::make_optional(video_config.dd.wa.hdr_toggle_delay) : std::nullopt
         }
       );
+#elif defined(__linux__)
+      if (video_config.linux_vdisplay.enabled) {
+        return std::make_unique<linux_vdisplay::LinuxDisplaySettingsManager>(video_config);
+      }
+      return nullptr;
 #else
       return nullptr;
 #endif
@@ -721,7 +729,13 @@ namespace display_device {
 
       // In case we have failed to revert configuration before shutting down, we should
       // do it now.
-      revert_configuration_unlocked(revert_option_e::try_indefinitely);
+      bool restore_on_startup = true;
+#ifdef __linux__
+      restore_on_startup = video_config.linux_vdisplay.restore_on_startup;
+#endif
+      if (restore_on_startup) {
+        revert_configuration_unlocked(revert_option_e::try_indefinitely);
+      }
     }
 
     class deinit_t: public platf::deinit_t {
@@ -757,7 +771,83 @@ namespace display_device {
     });
   }
 
+  std::variant<VirtualDisplayLease, std::string> prepare_display_for_session(const config::video_t &video_config, const rtsp_stream::launch_session_t &session) {
+    if (!video_config.linux_vdisplay.enabled) {
+      return VirtualDisplayLease {};
+    }
+
+    const auto result {parse_configuration(video_config, session)};
+    const auto *parsed_config {std::get_if<SingleDisplayConfiguration>(&result)};
+    if (!parsed_config) {
+      if (std::get_if<configuration_disabled_tag_t>(&result)) {
+        return std::string {"WayShine Linux virtual display is enabled, but dd_configuration_option disables display preparation."};
+      }
+      return std::string {"Failed to parse display configuration for WayShine Linux virtual display."};
+    }
+
+    std::lock_guard lock {DD_DATA.mutex};
+    if (!DD_DATA.sm_instance) {
+      return std::string {"Linux display settings manager is not initialized."};
+    }
+
+#ifdef __linux__
+    std::string linux_error;
+    const auto apply_result = DD_DATA.sm_instance->execute([parsed_config, &linux_error](auto &settings_iface) {
+      if (auto *linux_manager = dynamic_cast<linux_vdisplay::LinuxDisplaySettingsManager *>(&settings_iface)) {
+        const auto lease = linux_manager->prepareSession(*parsed_config);
+        if (!lease) {
+          linux_error = lease.error();
+          return SettingsManagerInterface::ApplyResult::DisplayModePrepFailed;
+        }
+        return SettingsManagerInterface::ApplyResult::Ok;
+      }
+      return settings_iface.applySettings(*parsed_config);
+    });
+#else
+    const auto apply_result = DD_DATA.sm_instance->execute([parsed_config](auto &settings_iface) {
+      return settings_iface.applySettings(*parsed_config);
+    });
+#endif
+    if (apply_result != SettingsManagerInterface::ApplyResult::Ok) {
+#ifdef __linux__
+      if (!linux_error.empty()) {
+        return linux_error;
+      }
+#endif
+      return std::string {"Strict WayShine display preflight failed before capture."};
+    }
+
+#ifdef __linux__
+    std::string mode;
+    if (parsed_config->m_resolution && parsed_config->m_refresh_rate) {
+      unsigned int refresh = 0;
+      if (const auto *rational = std::get_if<Rational>(&*parsed_config->m_refresh_rate)) {
+        refresh = rational->m_denominator ? (rational->m_numerator + rational->m_denominator / 2) / rational->m_denominator : 0;
+      } else {
+        refresh = static_cast<unsigned int>(std::get<double>(*parsed_config->m_refresh_rate) + 0.5);
+      }
+      mode = linux_vdisplay::mode_to_string({parsed_config->m_resolution->m_width, parsed_config->m_resolution->m_height, refresh});
+    }
+    return VirtualDisplayLease {
+      .valid = true,
+      .connector = parsed_config->m_device_id.empty() ? video_config.linux_vdisplay.connector : parsed_config->m_device_id,
+      .mode = mode
+    };
+#else
+    return VirtualDisplayLease {.valid = true};
+#endif
+  }
+
   void configure_display(const config::video_t &video_config, const rtsp_stream::launch_session_t &session) {
+#ifdef __linux__
+    if (video_config.linux_vdisplay.enabled) {
+      // WayShine Linux virtual display uses prepare_display_for_session() for
+      // strict synchronous failure semantics. Re-applying asynchronously here
+      // would replace the restore snapshot with the already-modified state.
+      return;
+    }
+#endif
+
     const auto result {parse_configuration(video_config, session)};
     if (const auto *parsed_config {std::get_if<SingleDisplayConfiguration>(&result)}; parsed_config) {
       configure_display(*parsed_config);

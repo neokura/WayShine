@@ -152,6 +152,15 @@ namespace config {
       workarounds_t wa;
     } dd;
 
+    struct linux_vdisplay_t {
+      bool enabled;
+      std::string connector;
+      std::string profile;
+      std::string backend;
+      std::string mode_policy;
+      bool restore_on_startup;
+    } linux_vdisplay;
+
     int max_bitrate;  // Maximum bitrate, sets ceiling in kbps for bitrate requested from client
     double minimum_fps_target;  ///< Lowest framerate that will be used when streaming. Range 0-1000, 0 = half of client's requested framerate.
   };

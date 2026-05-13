@@ -1396,6 +1396,98 @@ editing the `conf` file in a text editor. Use the examples as reference.
     </tr>
 </table>
 
+### linux_vdisplay_enabled
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            Enable WayShine Linux virtual display strict preflight for Moonlight sessions.
+            @note{Linux/KDE Wayland only in P0. The requested resolution and refresh rate must be present in the installed EDID profile. Missing modes fail before capture; WayShine never falls back to a physical display.}
+            @note{For strict capture mapping, set [output_name](#output_name) to the virtual connector or set [dd_configuration_option](#dd_configuration_option) to `ensure_primary` or `ensure_only_display`.}
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">@code{}disabled@endcode</td>
+    </tr>
+</table>
+
+### linux_vdisplay_connector
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            DRM connector used for the boot-time EDID virtual display, for example `DP-2`.
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">unset</td>
+    </tr>
+</table>
+
+### linux_vdisplay_profile
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            EDID profile name. P0 ships `sdr-default` only.
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">@code{}sdr-default@endcode</td>
+    </tr>
+</table>
+
+### linux_vdisplay_backend
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            Linux display control backend. P0 supports `kscreen_doctor`.
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">@code{}kscreen_doctor@endcode</td>
+    </tr>
+</table>
+
+### linux_vdisplay_mode_policy
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            Mode selection policy. P0 supports `exact` only.
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">@code{}exact@endcode</td>
+    </tr>
+</table>
+
+### linux_vdisplay_restore_on_startup
+
+<table>
+    <tr>
+        <td>Description</td>
+        <td colspan="2">
+            Allow WayShine to attempt virtual display state recovery during startup.
+        </td>
+    </tr>
+    <tr>
+        <td>Default</td>
+        <td colspan="2">@code{}enabled@endcode</td>
+    </tr>
+</table>
+
 ### max_bitrate
 
 <table>
